@@ -8,15 +8,16 @@
     <link rel="stylesheet" type="text/css" href="styles/main.css">
 </head>
 <body>
+  <form action="/upload_article" method="post" enctype="multipart/form-data">
     <div class="container">
         <h1>Welcome to Summarticle</h1>
         <h2>Please enter the article below</h2>
-        <input type="file" id="pdfFile" accept="application/pdf" name="upload">
+        <input type="file" id="pdfFile" accept="application/pdf" name="paper" required>
     </div>
 
-    <div 
+    <div>
     <label class="switch">
-        <input type="checkbox">
+        <input type="checkbox" name="language_toggle">
         <span class="slider round"></span>
     </label>
     </div>
@@ -24,6 +25,7 @@
     <div class="container">
         <button id="submitButton">Send/OK</button>
     </div>
+  </form>
 </body>
 </center>
 </html>
