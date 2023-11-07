@@ -34,6 +34,26 @@ async def process_article(
     response.headers["Content-Type"] = "text.html"
     return response
 
+@app.get("/get_summary")
+async def get_summary(
+    paper_id: int,
+    language_toggle: bool = False,
+    response_class=HTMLResponse
+):
+    # This is a placeholder, because it should be handeled by other parts of the program.
+    if language_toggle:
+        language = "English"
+    else:
+        language = "Dutch"
+
+    request_url = "http://ORCHESTRATOR/get_summary"
+    request_values = {'paper_id': paper_id, 'language_toggle': language_toggle}
+    summary_data = requests.post(request_url, data=request_values).json()
+    html_text = f"<p>This should be a summary written in {language}. The file is a paper has the following data: {summary_data}</p>"
+    response = HTMLResponse(content=html_text)
+    response.headers["Content-Type"] = "text.html"
+    return response
+
 
 # This is the main page (index.html) that people see first.
 @app.get("/", response_class=HTMLResponse)
