@@ -2,7 +2,8 @@ from fastapi import Form, UploadFile, FastAPI
 from typing import Annotated
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-
+import requests
+import os
 
 app = FastAPI()
 
@@ -16,19 +17,25 @@ app.mount("/styles", StaticFiles(directory="html/styles"), name="styles")
 async def process_article(
     paper: UploadFile,
     language_toggle: Annotated[bool, Form()] = False,
-    response_class=HTMLResponse):
-
+    response_class=HTMLResponse
+):
     # This is a placeholder, because it should be handeled by other parts of the program.
     if language_toggle:
         language = "English"
     else:
         language = "Dutch"
-    html_text = f"<p>This should be a summary of the file with name {paper.filename}, written in {language}.</p>"
 
+    request_url = "http://ORCHESTRATOR/upload_article"
+    request_files = {'paper': paper.file}
+    request_values = {'language_toggle': language_toggle}
+    summary_data = requests.post(request_url, files=request_files, data=request_values).json()
+    html_text = f"<p>This should be a summary of the file with name {paper.filename}, written in {language}. The file is a paper has the following data: {summary_data}</p>"
     response = HTMLResponse(content=html_text)
     response.headers["Content-Type"] = "text.html"
     return response
 
+
+# This is the main page (index.html) that people see first.
 @app.get("/", response_class=HTMLResponse)
 async def main_page():
     with open("html/index.html") as file:
