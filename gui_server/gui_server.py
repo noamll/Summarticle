@@ -35,6 +35,8 @@ async def process_article(
     request_files = {'paper': paper.file}
     request_values = {'language_toggle': language_toggle}
     summary_data = requests.post(request_url, files=request_files, data=request_values).json()
+    for suggestion in summary_data["suggestions"]:
+        suggestion["href"] = f"/get_summary?paper_id={suggestion['id']}"
     html_text = template.render(summary_data)
     response = HTMLResponse(content=html_text)
     response.headers["Content-Type"] = "text.html"
@@ -54,7 +56,7 @@ async def get_summary(
 
     request_url = "http://ORCHESTRATOR/get_summary"
     request_values = {'paper_id': paper_id, 'language_toggle': language_toggle}
-    summary_data = requests.post(request_url, data=request_values).json()
+    summary_data = requests.get(request_url, data=request_values).json()
     html_text = template.render(summary_data)
     response = HTMLResponse(content=html_text)
     response.headers["Content-Type"] = "text.html"
