@@ -4,6 +4,12 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import requests
 import os
+from jinja2 import Environment, PackageLoader
+
+HTML_TEMPLATE_NAME = "results.html"
+
+jinja_env = Environment(loader=PackageLoader("gui_server", "html"))
+template = jinja_env.get_template(HTML_TEMPLATE_NAME)
 
 app = FastAPI()
 
@@ -29,7 +35,7 @@ async def process_article(
     request_files = {'paper': paper.file}
     request_values = {'language_toggle': language_toggle}
     summary_data = requests.post(request_url, files=request_files, data=request_values).json()
-    html_text = f"<p>This should be a summary of the file with name {paper.filename}, written in {language}. The file is a paper has the following data: {summary_data}</p>"
+    html_text = template.render(summary_data)
     response = HTMLResponse(content=html_text)
     response.headers["Content-Type"] = "text.html"
     return response
@@ -49,7 +55,7 @@ async def get_summary(
     request_url = "http://ORCHESTRATOR/get_summary"
     request_values = {'paper_id': paper_id, 'language_toggle': language_toggle}
     summary_data = requests.post(request_url, data=request_values).json()
-    html_text = f"<p>This should be a summary written in {language}. The file is a paper has the following data: {summary_data}</p>"
+    html_text = template.render(summary_data)
     response = HTMLResponse(content=html_text)
     response.headers["Content-Type"] = "text.html"
     return response

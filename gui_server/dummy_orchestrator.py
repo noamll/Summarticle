@@ -6,6 +6,7 @@ import uvicorn
 # After adding these responses the server gets started;
 # any responses not listed here will give an error.
 with responses.RequestsMock() as rsps:
+    # Expected results for getting a summary from file upload.
     rsps.add(
         responses.POST,
         "http://ORCHESTRATOR/upload_article",
@@ -20,10 +21,20 @@ with responses.RequestsMock() as rsps:
                     ],
                     "publication_date": "2023-11-06",
                 },
+                {
+                    "id": 18,
+                    "title": "Color interpretation is guided by informativity expectations, not by world knowledge about colors",
+                    "authors": [
+                        "Rohde",
+                        "Rubio-Fernandez",
+                    ],
+                    "publication_date": "2022-12-01",
+                },
             ],
         },
     )
 
+    # Expected results for getting a summery by id, for example for getting the related articles.
     rsps.add(
         responses.GET,
         "http://ORCHESTRATOR/get_summary",
