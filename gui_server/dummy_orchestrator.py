@@ -12,6 +12,7 @@ with responses.RequestsMock() as rsps:
         "http://ORCHESTRATOR/upload_article",
         json={
             "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla venenatis commodo augue, feugiat vestibulum turpis molestie quis. Cras eu lacus velit. Praesent metus erat, scelerisque ut volutpat ac, mollis ac enim. Morbi hendrerit orci in varius porta. Donec viverra metus sed ante consectetur, ac sagittis urna eleifend. Vivamus maximus dignissim semper. Phasellus non porttitor velit, eu dictum est. Proin molestie facilisis fringilla. Maecenas cursus, massa a hendrerit dignissim, dolor ipsum pretium sapien, et euismod mauris eros eget tortor. Sed sed molestie justo, id sollicitudin diam. Phasellus gravida dignissim quam, ac vestibulum ipsum venenatis nec. Fusce consectetur in metus quis consequat. Morbi tempor rutrum mauris ut euismod.",
+            "id": 13,
             "suggestions": [
                 {
                     "id": 13,
@@ -40,6 +41,7 @@ with responses.RequestsMock() as rsps:
         "http://ORCHESTRATOR/get_summary",
         json={
             "summary": "Ut vestibulum dignissim velit, vel aliquam massa placerat porttitor. Nunc non leo elit. Praesent non leo varius, condimentum enim ac, venenatis elit. Nulla facilisi. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi efficitur, justo in imperdiet dictum, leo nibh tristique lorem, nec consequat nisl sapien ut magna. Ut placerat egestas lacus, at feugiat dolor imperdiet sed. Nulla est metus, fringilla quis sodales a, placerat vel tortor. Etiam vehicula malesuada lorem convallis tempus. Curabitur porta ex at pellentesque ullamcorper. ",
+            "id": 13,
             "suggestions": [
                 {
                     "id": 13,

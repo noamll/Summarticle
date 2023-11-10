@@ -62,6 +62,17 @@ async def get_summary(
     response.headers["Content-Type"] = "text.html"
     return response
 
+@app.get("/vote")
+async def vote(
+    paper_id: int,
+    vote: str,
+):
+    with open("html/feedback.html") as file:
+        html_text = file.read()
+
+    response = HTMLResponse(content=html_text)
+    response.headers["Content-Type"] = "text.html"
+    return response
 
 # This is the main page (index.html) that people see first.
 @app.get("/", response_class=HTMLResponse)
