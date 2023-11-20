@@ -1,60 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Output Page</title>
-    <style>
-        .summary {
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        .summary-content {
-            font-size: 16px;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-
-        .buttons {
-            margin-bottom: 20px;
-        }
-
-        .button {
-            padding: 10px 20px;
-            margin: 0 10px;
-            cursor: pointer;
-        }
-
-        .articles {
-            font-size: 16px;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="styles/main.css">
 </head>
+
 <body>
-    <div class="summary">
-        <h2>Summary:</h2>
-        <div class="summary-content">
-            {{summary}}
+    <div id="wrapper">
+        <div class="summary">
+            <h2>Summary:</h2>
+            <p class="summary-content">
+                {{summary}}
+            </p>
         </div>
 
-
-    </div>
-
-    <div class="buttons">
-        <form action="/vote">
+        <form action="/vote" class="buttons">
             <input type="hidden" name="paper_id" value="{{id}}">
             <button type="submit" name="vote" value="upvote">Thumbs Up</button>
             <button type="submit" name="vote" value="downvote">Thumbs Down</button>
         </form>
-    </div>
 
-    <div class="articles">
-        <h2>Related Articles:</h2>
-        <ul>
-            {% for item in suggestions %}
-            <li><a href="{{item.href}}">{{item.title}}{{item.authors}}</a></li>
-            {% endfor %}
-        </ul>
+        <div class="articles">
+            <h2>Related Articles:</h2>
+            <ul>
+                {% for item in suggestions %}
+                <li><a href="{{item.href}}">{{item.title}}{{item.authors}}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
-    
+</body>
+
+</html>

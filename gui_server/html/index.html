@@ -1,31 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-<center>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" type="text/css" href="styles/main.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="styles/main.css">
+  <link rel="stylesheet" type="text/css" href="styles/slider.css">
 </head>
+
 <body>
-  <form action="/upload_article" method="post" enctype="multipart/form-data">
-    <div class="container">
-        <h1>Welcome to Summarticle</h1>
-        <h2>Please enter the article below</h2>
+  <div id="centering_div">
+    <div id="container">
+      <h1>Welcome to Summarticle</h1>
+      <h2>Please enter the article below</h2>
+      <form action="/upload_article" method="post" enctype="multipart/form-data">
         <input type="file" id="pdfFile" accept="application/pdf" name="paper" required>
-    </div>
-
-    <div>
-    <label class="switch">
-        <input type="checkbox" name="language_toggle">
-        <span class="slider round"></span>
-    </label>
-    </div>
-
-    <div class="container">
+        <div id="slider">
+          <label for="language_toggle">Dutch</label>
+          <label class="switch">
+            <input type="checkbox" name="language_toggle" id="language_toggle">
+            <span class="slider round"></span>
+          </label>
+          <label for="language_toggle">English</label>
+        </div>
         <button id="submitButton">Send/OK</button>
     </div>
+  </div>
   </form>
 </body>
-</center>
+
 </html>
