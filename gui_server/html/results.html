@@ -17,7 +17,7 @@
             </p>
         </div>
 
-        <form action="/vote" class="buttons">
+        <form action="/vote" class="buttons", method="post">
             <input type="hidden" name="paper_id" value="{{id}}">
             <button type="submit" name="vote" value="upvote">Thumbs Up</button>
             <button type="submit" name="vote" value="downvote">Thumbs Down</button>

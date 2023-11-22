@@ -62,11 +62,15 @@ async def get_summary(
     response.headers["Content-Type"] = "text.html"
     return response
 
-@app.get("/vote")
+@app.post("/vote")
 async def vote(
-    paper_id: int,
-    vote: str,
+    paper_id: Annotated[int, Form()],
+    vote: Annotated[str, Form()],
 ):
+    request_url = "http://ORCHESTRATOR/vote"
+    vote_data = {"paper_id": paper_id, "vote": vote}
+    response = requests.post(request_url, data=vote_data)
+
     with open("html/feedback.html") as file:
         html_text = file.read()
 

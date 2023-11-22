@@ -55,4 +55,12 @@ with responses.RequestsMock() as rsps:
         },
     )
 
+    rsps.add(
+        responses.POST,
+        "http://ORCHESTRATOR/vote",
+        json={
+            "result": True
+        }
+    )
+
     uvicorn.run("gui_server:app")
