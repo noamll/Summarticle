@@ -1,122 +1,48 @@
-from flask import Flask, request, jsonify
-from queue import Queue
-from threading import Thread
-from summarization_model import sumArticle2
-from transformers import pipeline
 import boto3
-import json
+import os
+from pypdf import PdfReader
+from transformers import pipeline
+from transformers import AutoModelForSeq2SeqLM
+from pypdf.errors import PdfReadError
 
+os.environ['AWS_DEFAULT_REGION'] = 'eu-north-1'
 
-
-sqs_queue_url = 'https://sqs.eu-north-1.amazonaws.com/951932431518/Summarticle.fifo'
 
 # Create an SQS client
 sqs = boto3.client('sqs')
 
+# Define the SQS queue URL
+sqs_queue_url = 'https://sqs.eu-north-1.amazonaws.com/951932431518/Summarticle.fifo'
 
-app = Flask(__name__)
-
-
-
-# Create an endpoint for submitting summarization tasks.
-@app.route('/submit_summary', methods=['POST'])
-def submit_summary_task():
-    data = request.get_json()  # JSON data with the text to summarize.
-
-    # Send message to SQS queue with the entire PDF content as the message body
-    response = sqs.send_message(
-        QueueUrl=sqs_queue_url,
-        MessageBody=data['pdf_content'],  # Assuming 'pdf_content' is the key for the PDF content
-        MessageGroupId='1'  # Specify the message group ID
-    )
-
-    return jsonify({'message': 'Summary task submitted successfully', 'summary': response['MessageId']})
-
-
-def summary_worker():
-    while True:
-        # Receive message from SQS queue
-        response = sqs.receive_message(
-            QueueUrl=sqs_queue_url,
-            AttributeNames=['All'],
-            MessageAttributeNames=['All'],
-            MaxNumberOfMessages=1,
-            VisibilityTimeout=0,
-            WaitTimeSeconds=0
-        )
-
-        # Process the received message
-        if 'Messages' in response:
-            message = response['Messages'][0]
-            receipt_handle = message['ReceiptHandle']
-
-            # Process the message data safely using json.loads
-            try:
-                pdf_content = message['Body']
-                summary = sumArticle2(pdf_content)
-
-                # Add your logic for processing the summarized data
-                print("Summarizing:", summary)
-            except Exception as e:
-                print(f"Error processing PDF content: {e}")
-
-            # Delete received message from queue
-            sqs.delete_message(
-                QueueUrl=sqs_queue_url,
-                ReceiptHandle=receipt_handle
-            )
-
-
-# Create an endpoint for submitting translation tasks.
-@app.route('/submit_translation', methods=['POST'])
-def submit_translation_task():
-    data = request.get_json()  # JSON data with the text to translate and target language.
-    
-    # Call the translation function.
-    translation = translate_text(data['text'], data['target_language'])
-
-    return jsonify({'message': 'Translation task submitted successfully', 'translation': translation})
-
-# Set up a task queue and worker thread for translation.
-translation_queue = Queue()
-
-def translation_worker():
-    while True:
-        task_data = translation_queue.get()
-        # Process the translation task using your logic.
-        # You can call your translation function here.
-        # Task handling logic for translation goes here.
-        print("Translating:", task_data)
-        translation_queue.task_done()
-
-translation_worker_thread = Thread(target=translation_worker)
-translation_worker_thread.daemon = True
-translation_worker_thread.start()
-
-# Create an endpoint for submitting recommended articles tasks.
-@app.route('/submit_recommend', methods=['POST'])
-def submit_recommend_task():
-    data = request.get_json()  # JSON data with information to generate recommendations.
-    
-    # Enqueue the recommended articles task.
-    recommend_queue.put(data)  # Assuming 'data' contains relevant information.
-
-    return jsonify({'message': 'Recommendation task submitted successfully'})
-
-# Set up a task queue and worker thread for recommended articles.
-recommend_queue = Queue()
-
-def recommend_worker():
-    while True:
-        task_data = recommend_queue.get()
-        # Process the recommended articles task using your logic.
-        # Task handling logic for recommendations goes here.
-        print("Generating recommendations:", task_data)
-        recommend_queue.task_done()
-
-recommend_worker_thread = Thread(target=recommend_worker)
-recommend_worker_thread.daemon = True
-recommend_worker_thread.start()
+# Define the summarizer function
+def sumArticle1(pdfFile): # Function to summarize article per page
+    if pdfFile.endswith(".pdf"):
+        try:
+            print("Start Summarizing")
+            summarizer = AutoModelForSeq2SeqLM.from_pretrained("pszemraj/led-large-book-summary") # Model used from the huggingface hub (https://huggingface.co/pszemraj/led-large-book-summary)
+            for text in pdfTE(pdfFile): # Iterate over generator
+                summarizedPage = summarizer(text)
+                print(summarizedPage, end="\n")
+                print()
+        except PdfReadError:
+            return 0
+        except OSError:
+            return 0
+        
+def sumArticle2(pdfFile):
+    if pdfFile.endswith(".pdf"):
+        try:
+            print('Start Summarizing')
+            summarizer = AutoModelForSeq2SeqLM.from_pretrained("pszemraj/led-large-book-summary")
+            articleCombined = articleC(pdfFile)
+            summarizedPage = summarizer(articleCombined)
+            summarizedPage = summarizer(articleCombined)
+        except PdfReadError:
+            return 0
+        except OSError:
+            return 0
+    else:
+        return 0
 
 # Translation function using transformers pipeline.
 def translate_text(text, target_language):
@@ -124,6 +50,49 @@ def translate_text(text, target_language):
     translation_result = translation_pipeline(text, target_lang=target_language)
     return translation_result[0]['translation_text']
 
-# Run the Flask app.
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8081)
+# Send messages to the SQS queue
+def send_message_to_queue(message):
+    response = sqs.send_message(
+        QueueUrl=sqs_queue_url,
+        MessageBody=message,
+        MessageGroupId='group1'
+    )
+    return response
+
+# Process messages from the SQS queue
+def process_messages_from_queue():
+    while True:
+        response = sqs.receive_message(
+            QueueUrl=sqs_queue_url,
+            MaxNumberOfMessages=1,
+            WaitTimeSeconds=20
+        )
+        if 'Messages' in response:
+            message = response['Messages'][0]
+            body = message['Body']
+            receipt_handle = message['ReceiptHandle']
+            
+            # Perform summarization
+            summary = sumArticle2(body)
+            
+            # Perform translation
+            translation = translate_text(summary, "nl")
+            
+            # Print the translated text
+            print(translation)
+            
+            # Delete the message from the queue
+            sqs.delete_message(
+                QueueUrl=sqs_queue_url,
+                ReceiptHandle=receipt_handle
+            )
+        else:
+            break
+
+# Example usage:
+# Send a message to the SQS queue
+# send_message_to_queue('C:\\Users\\arash\\Downloads\\Bilingualism and the role of music in early language acquisition_ u719136.pdf')
+
+# Process messages from the SQS queue
+process_messages_from_queue()
+
