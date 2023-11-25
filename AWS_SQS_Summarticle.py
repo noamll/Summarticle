@@ -165,7 +165,7 @@ def process_messages_from_queue():
 
 # Example usage:
 # Send a message to the SQS queue
-send_message_to_queue('C:\\Users\\arash\\Downloads\\Bilingualism and the role of music in early language acquisition_ u719136.pdf')
+#send_message_to_queue('C:\\Users\\arash\\Downloads\\Bilingualism and the role of music in early language acquisition_ u719136.pdf')
 
 # Process messages from the SQS queue
 process_messages_from_queue()
