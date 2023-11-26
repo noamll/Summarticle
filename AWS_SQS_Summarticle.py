@@ -52,14 +52,23 @@ def articleC(pdfFile, version=1, start=0, end=0):
         return textCombined
 
 
-def sumArticle2(pdfFile):
-    # Function to summarize the entire article.
+
+
+def sumArticle2(pdfFile, translate_summary=False):
     if pdfFile.endswith(".pdf"):
         try:
             summarizer = pipeline("summarization", model="pszemraj/led-large-book-summary")
             articleCombined = articleC(pdfFile)
             summarizedPage = summarizer(articleCombined, max_length=1000, min_length=200, do_sample=True)
-            return summarizedPage[0]["summary_text"]
+
+            if translate_summary:
+                # If translation is requested, translate the summary
+                translated_text = translate_text(summarizedPage[0]["summary_text"])
+                return translated_text
+            else:
+                # Otherwise, return the original English summary
+                return summarizedPage[0]["summary_text"]
+
         except PdfReadError as PRE:
             return f"Oops! a PDF Read Error {PRE} happened. Please retry the task once the issue has been resolved."
         except OSError as OS:
@@ -93,6 +102,8 @@ def sumArticle2(pdfFile):
                 return f"Oops! An unexpected error occurred, {E}. Please report the error to the team."
     else:
         raise Exception("The file format is not a valid pdf.")
+
+
 
 
 def pdfKE(pdfFile, language='english'):
@@ -147,14 +158,14 @@ def process_messages_from_queue():
             receipt_handle = message['ReceiptHandle']
 
             try:
+                # Check if translation is requested
+                translate_summary = message.get('TranslateSummary', '').lower() == 'true'
+
                 # Perform summarization
-                summary = sumArticle2(body)
+                summary = sumArticle2(body, translate_summary)
 
-                # Perform translation
-                translated_text = translate_text(summary)
-
-                # Print or use the translated text
-                print(translated_text)
+                # Print or use the summary
+                print(summary)
 
             finally:
                 # Delete the message from the queue
