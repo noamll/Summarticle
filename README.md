@@ -10,21 +10,25 @@ Dutch and English, if the summary is not sufficient to the user, the user may as
 particular key-words on which recommendated articles are based.</p><br>
 
 <h3>Usage instructions for end-users</h3>
-<p>Still has to be written and implemented.</p>
 <ol>
-  <li>NaN</li>
+  <li>Add file in .pdf format to the pdf_database folder</li>
+  <li>Implement file name as argument to the sumArticle function</li>
+  <li>Summary can be obtained after approximately 3/4 minutes depending on the size of the article</li>
+  <li>Implement file name as argument to the pdfKE function</li>
+  <li>Keywords can be obtained and used as indicator for the article at other articles</li>
+  <li>Implement summary variable name to the translArticle function if summary language desired to be Dutch</li>
+  <li>Dutch summary can be obtained after approximately 10 seconds</li>
 </ol><br>
 
 <h3>Usage instructions for contributers</h3>
-<p>Still has to be written and implemented.</p>
 <ol>
-  <li>NaN</li>
+  <li>After performing usage instructions, when bugs have been found, please inform the dev team</li>
 </ol><br>
 
 <h3>Contributer expectations</h3>
-<p>Still has to be written and implemented.</p><br>
+<p>Contributers are expected to report bugs and issues if encounterd using the code</p><br>
 
 <h3>Known issues</h3>
-<p>Still has to be written and implemented.</p>
+<p>sumArticle function may crash once token count of implemented article surpasses 2 times the model token limit</p>
 
 
