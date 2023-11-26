@@ -117,10 +117,10 @@ def pdfKE(pdfFile, language='english'):
         return f"Oops! The task failed. Please retry the task once the issue has been resolved."
 
 
-def send_message_to_queue(message):
+def send_message_to_queue(pdf_file_path):
     response = sqs.send_message(
         QueueUrl=sqs_queue_url,
-        MessageBody=message,
+        MessageBody=pdf_file_path,
         MessageGroupId='group1'
     )
     return response
@@ -128,8 +128,8 @@ def send_message_to_queue(message):
 # Summarization translation
 translation_model = pipeline("translation", model="Helsinki-NLP/opus-mt-en-nl")  # Create translation pipeline
 
-def translate_text(text, target_language='nl'):
-    translation_result = translation_model(text, target_language=target_language)
+def translate_text(text):
+    translation_result = translation_model(text)
     return translation_result[0]['translation_text']
 
 # Process messages from the SQS queue
@@ -138,27 +138,30 @@ def process_messages_from_queue():
         response = sqs.receive_message(
             QueueUrl=sqs_queue_url,
             MaxNumberOfMessages=1,
-            WaitTimeSeconds=20
+            WaitTimeSeconds=20,
+            VisibilityTimeout=300  # Set a visibility timeout (in seconds)
         )
         if 'Messages' in response:
             message = response['Messages'][0]
             body = message['Body']
             receipt_handle = message['ReceiptHandle']
 
-            # Perform summarization
-            summary = sumArticle2(body)
+            try:
+                # Perform summarization
+                summary = sumArticle2(body)
 
-            # Perform translation
-            translated_text = translate_text(summary)
+                # Perform translation
+                translated_text = translate_text(summary)
 
-            # Print or use the translated text
-            print(translated_text)
+                # Print or use the translated text
+                print(translated_text)
 
-            # Delete the message from the queue
-            sqs.delete_message(
-                QueueUrl=sqs_queue_url,
-                ReceiptHandle=receipt_handle
-            )
+            finally:
+                # Delete the message from the queue
+                sqs.delete_message(
+                    QueueUrl=sqs_queue_url,
+                    ReceiptHandle=receipt_handle
+                )
         else:
             break
 
@@ -169,4 +172,3 @@ def process_messages_from_queue():
 
 # Process messages from the SQS queue
 process_messages_from_queue()
-
