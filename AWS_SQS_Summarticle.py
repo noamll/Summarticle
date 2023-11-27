@@ -127,21 +127,31 @@ def pdfKE(pdfFile, language='english'):
     else:
         return f"Oops! The task failed. Please retry the task once the issue has been resolved."
 
-
-def send_message_to_queue(pdf_file_path):
-    response = sqs.send_message(
-        QueueUrl=sqs_queue_url,
-        MessageBody=pdf_file_path,
-        MessageGroupId='group1'
-    )
-    return response
-
 # Summarization translation
 translation_model = pipeline("translation", model="Helsinki-NLP/opus-mt-en-nl")  # Create translation pipeline
 
 def translate_text(text):
     translation_result = translation_model(text)
     return translation_result[0]['translation_text']
+
+
+
+
+def send_message_to_queue(pdf_file_path, translate_summary=False):
+    response = sqs.send_message(
+        QueueUrl=sqs_queue_url,
+        MessageBody=pdf_file_path,
+        MessageGroupId='group1',
+        MessageAttributes={
+            'TranslateSummary': {
+                'DataType': 'String',
+                'StringValue': str(translate_summary)
+            }
+        }
+    )
+    return response
+
+
 
 # Process messages from the SQS queue
 def process_messages_from_queue():
