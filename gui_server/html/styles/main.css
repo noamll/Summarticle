@@ -72,3 +72,7 @@ form {
   padding: 1rem;
   border: solid black 0.2rem;
 }
+
+.vote_images {
+  width: 2rem;
+}
