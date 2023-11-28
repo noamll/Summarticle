@@ -37,28 +37,6 @@ def upload_pdf():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# New route to handle GET request for a summary
-@app.route('/get_summary/<string:paper_id>', methods=['GET'])
-def get_summary(paper_id):
-    try:
-        # Check if the paper ID exists in the dictionary
-        if paper_id in uploaded_papers:
-            # Simulate processing time for the summary
-            time.sleep(5)
-
-            # Retrieve the file path and translation flag from the dictionary
-            file_path = uploaded_papers[paper_id]['file_path']
-            translate_summary = uploaded_papers[paper_id]['translate_summary']
-
-            # Process the file path and translation flag as needed
-            summary = process_messages_from_queue(file_path, translate_summary)
-
-            # Return summary data as JSON
-            return jsonify({'summary': summary}), 200
-        else:
-            return jsonify({'error': 'Invalid paper ID'}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 
 #New endpoint for saving summaries to the database
