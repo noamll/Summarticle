@@ -1,9 +1,18 @@
+#For Flask app
 from flask import Flask, request, jsonify
+
+#For AWS SQS
 from AWS_SQS_Summarticle import send_message_to_queue, process_messages_from_queue
-from AWS_SQS_Summarticle import save_summary
-from AWS_SQS_Summarticle import read_summary
 import time
 import uuid
+
+#For JSON to DB
+from AWS_SQS_Summarticle import save_summary
+from AWS_SQS_Summarticle import read_summary
+from AWS_SQS_Summarticle import read_keyword
+from AWS_SQS_Summarticle import update_rating
+from AWS_SQS_Summarticle import delete_summary
+
 
 
 app = Flask(__name__)
@@ -75,6 +84,60 @@ def get_summary(paper_id):
             return jsonify({'summary': summary}), 200
         else:
             return jsonify({'error': 'Invalid paper ID'}), 400
+    except Exception as e:
+        # Return an error message in case of exceptions
+        return jsonify({'error': str(e)}), 500
+        
+
+#In this code, the read_keyword_endpoint function gets the keyword from the JSON data in the request, 
+#calls the read_keyword function to get the titles of the papers that contain the keyword, and returns the titles.
+@app.route('/read-keyword', methods=['POST'])
+def read_keyword_endpoint():
+    try:
+        # Get the JSON data from the request
+        json_data = request.get_json()
+
+        # Get the keyword from the JSON data
+        keyword = json_data.get('keyword')
+
+        # Call the read_keyword function and get the titles
+        titles = read_keyword(keyword)
+
+        # Return the titles
+        return jsonify({'titles': titles}), 200
+    except Exception as e:
+        # Return an error message in case of exceptions
+        return jsonify({'error': str(e)}), 500
+
+
+#The update_rating_endpoint function gets the JSON data from the request and calls the update_rating function to update the rating of the summary. 
+#It then returns a success message.
+@app.route('/update-rating', methods=['POST'])
+def update_rating_endpoint():
+    try:
+        # Get the JSON data from the request
+        json_data = request.get_json()
+
+        # Update the rating
+        update_rating(json_data)
+
+        # Return a success message
+        return jsonify({'message': 'Rating updated successfully'}), 200
+    except Exception as e:
+        # Return an error message in case of exceptions
+        return jsonify({'error': str(e)}), 500
+
+
+#The delete_summary_endpoint function calls the delete_summary function to delete the summary with a rating lower than 3. 
+#It then returns a success message.
+@app.route('/delete-summary', methods=['DELETE'])
+def delete_summary_endpoint():
+    try:
+        # Delete the summary
+        delete_summary()
+
+        # Return a success message
+        return jsonify({'message': 'Summary deleted successfully'}), 200
     except Exception as e:
         # Return an error message in case of exceptions
         return jsonify({'error': str(e)}), 500
