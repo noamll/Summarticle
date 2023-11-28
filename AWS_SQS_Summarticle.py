@@ -7,6 +7,9 @@ from transformers import pipeline
 import pandas as pd
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+import pyodbc
+import json
+import random
 
 os.environ['AWS_DEFAULT_REGION'] = 'eu-north-1'
 
@@ -16,6 +19,8 @@ sqs = boto3.client('sqs')
 # Define the SQS queue URL
 sqs_queue_url = 'https://sqs.eu-north-1.amazonaws.com/951932431518/Summarticle.fifo'
 
+
+# ---- AI MODEL ---- 
 
 def pdfTE(pdfFile, version=1, start=0, end=0):
     # Function for text extraction from PDF.
@@ -135,7 +140,162 @@ def translate_text(text):
     return translation_result[0]['translation_text']
 
 
+# ---- END AI MODEL ---- 
 
+# ---- JSON to DB ---- 
+
+#Database functions
+import pyodbc
+import json
+import random
+
+# Replace 'your_connection_string' with your actual connection string
+connection_string = r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=Summarticle_database.accdb;'
+
+def save_paper(json_data):
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    paper_title = json_data.get("paper", {}).get("title")
+    
+    # Check if the paper title is not already in the Paper table
+    select_query = "SELECT * FROM papers WHERE title = ?"
+    cursor.execute(select_query, (paper_title,))
+    
+    if not cursor.fetchone():
+        # Paper title is not in the Paper table, save the paper
+        insert_query = "INSERT INTO papers (title, authors, DOI, keywords) VALUES (?, ?, ?, ?)"
+        cursor.execute(insert_query, (
+            paper_title,
+            json_data.get("paper", {}).get("authors"),
+            json_data.get("paper", {}).get("DOI"),
+            ', '.join(json_data.get("paper", {}).get("keywords", []))
+        ))
+        
+        connection.commit()
+
+    cursor.close()
+    connection.close()
+
+def save_summary(json_data):
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    paper_title = json_data.get("summary", {}).get("title")
+    
+    # Check if the paper title is not already in the Summary table
+    select_query = "SELECT * FROM summary WHERE title = ?"
+    cursor.execute(select_query, (paper_title,))
+    
+    if not cursor.fetchone():
+        # Paper title is not in the Summary table, save the summary
+        insert_query = "INSERT INTO summary (title, summary_en, rating_en) VALUES (?, ?, ?)"
+        cursor.execute(insert_query, (
+            paper_title,
+            json_data.get("summary", {}).get("summary_en"),
+            json_data.get("summary", {}).get("rating_en", 0)
+        ))
+        
+        connection.commit()
+    else:
+        # Paper title is already in the Summary table, save summary in a new row
+        insert_query = "INSERT INTO summary (title, summary_en, rating_en) VALUES (?, ?, ?)"
+        cursor.execute(insert_query, (
+            paper_title,
+            json_data.get("summary", {}).get("summary_en"),
+            json_data.get("summary", {}).get("rating_en", 0)
+        ))
+
+        connection.commit()
+
+    cursor.close()
+    connection.close()
+
+def read_summary(json_data):
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    paper_title = json_data.get("title")
+    language = json_data.get("language", "en")
+
+    # Check whether JSON GET request is from summary_en or summary_nl
+    if language == "en":
+        select_query = "SELECT summary_en, rating_en FROM summary WHERE title = ? AND summary_en IS NOT NULL"
+    elif language == "nl":
+        select_query = "SELECT summary_nl, rating_nl FROM summary WHERE title = ? AND summary_nl IS NOT NULL"
+    else:
+        return None  # Invalid language
+    
+    cursor.execute(select_query, (paper_title,))
+    result = cursor.fetchone()
+
+    if result:
+        # If there is a summary in the requested language, return it based on the rating
+        summary, rating = result
+        return summary if random.random() < rating / 10.0 else None  # Weighted random based on rating
+    else:
+        return None  # Create a new summary (you already have code for this)
+
+    cursor.close()
+    connection.close()
+
+def read_keyword(text):
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    keyword = text
+
+    # Get keyword from JSON request
+    select_query = "SELECT title FROM papers WHERE keywords LIKE ?"
+    cursor.execute(select_query, ('%' + keyword + '%',))
+    result = cursor.fetchall()
+
+    if result:
+        # If there are papers with the specified keyword, return the titles
+        return [row[0] for row in result]
+    else:
+        return None
+
+    cursor.close()
+    connection.close()
+
+def update_rating(json_data):
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    paper_title = json_data.get("title")
+    rating_type = json_data.get("rating_type")
+
+    # If JSON-rating == thumbs-up, corresponding rating in table += 1
+    # If JSON-rating == thumbs-down, corresponding rating in table -= 1
+    if rating_type == "thumbs-up":
+        update_query = "UPDATE summary SET rating_en = CASE WHEN rating_en + 1 > 10 THEN 10 ELSE rating_en + 1 END WHERE title = ?"
+    elif rating_type == "thumbs-down":
+        update_query = "UPDATE summary SET rating_en = CASE WHEN rating_en - 1 < 1 THEN 1 ELSE rating_en - 1 END WHERE title = ?"
+    else:
+        return None  # Invalid rating type
+
+    cursor.execute(update_query, (paper_title,))
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+def delete_summary():
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    # If summary_rating is lower than 3, delete from Summary table
+    delete_query = "DELETE FROM summary WHERE rating_en < 3"
+    cursor.execute(delete_query)
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+    
+# ---- END JSON to DB ---- 
+
+# QUEUE
 
 def send_message_to_queue(pdf_file_path, translate_summary=False):
     response = sqs.send_message(
