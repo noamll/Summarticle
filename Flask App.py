@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from AWS_SQS_Summarticle import send_message_to_queue, process_messages_from_queue
 from AWS_SQS_Summarticle import save_summary
-from AWS_SQS_Summarticle import get_summary
+from AWS_SQS_Summarticle import read_summary
 import time
 import uuid
 
