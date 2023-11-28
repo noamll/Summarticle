@@ -29,13 +29,13 @@
                 {% for item in suggestions %}
                 <li>
                     <a href="{{item.href}}">
-                        {{item.title}}
+                        {{item.title|e}}
                         (<ul class="author_list">
                             {% for author in item.authors %}
-                            <li>{{author}}</li>
+                            <li>{{author|e}}</li>
                             {% endfor %}
                         </ul>, 
-                        {{item.publication_date}}
+                        {{item.publication_date|e}}
                         )
                     </a>
                 </li>
