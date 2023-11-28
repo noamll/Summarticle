@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from AWS_SQS_Summarticle import send_message_to_queue, process_messages_from_queue
 from AWS_SQS_Summarticle import save_summary
+from AWS_SQS_Summarticle import get_summary
 import time
 import uuid
 
@@ -72,6 +73,30 @@ def save_translated_summary():
 
         # Return a success message
         return jsonify({'message': 'Summary saved successfully'}), 200
+    except Exception as e:
+        # Return an error message in case of exceptions
+        return jsonify({'error': str(e)}), 500
+
+
+#new endpoint for retrieving a summary stored in the database, based on paper ID
+@app.route('/get-summary/<string:paper_id>', methods=['GET'])
+def get_summary(paper_id):
+    try:
+        # Check if the paper ID exists in the dictionary
+        if paper_id in uploaded_papers:
+            # Get the paper title from the uploaded_papers dictionary using the paper_id
+            paper_title = uploaded_papers.get(paper_id, {}).get('file_path', '').split('/')[-1]
+
+            # Create a JSON data structure with the paper title
+            json_data = {'title': paper_title}
+
+            # Retrieve the summary from the database
+            summary = read_summary(json_data)
+
+            # Return the summary
+            return jsonify({'summary': summary}), 200
+        else:
+            return jsonify({'error': 'Invalid paper ID'}), 400
     except Exception as e:
         # Return an error message in case of exceptions
         return jsonify({'error': str(e)}), 500
