@@ -12,6 +12,7 @@ from AWS_SQS_Summarticle import read_summary
 from AWS_SQS_Summarticle import read_keyword
 from AWS_SQS_Summarticle import update_rating
 from AWS_SQS_Summarticle import delete_summary
+from AWS_SQS_Summarticle import save_paper
 
 
 
@@ -80,8 +81,19 @@ def get_summary(paper_id):
             # Retrieve the summary from the database
             summary = read_summary(json_data)
 
-            # Return the summary
-            return jsonify({'summary': summary}), 200
+            # If summary is not None, return the summary
+            if summary is not None:
+                return jsonify({'summary': summary}), 200
+            else:
+                # If there is no summary for this article, summarize it using the AI model
+                text = sumArticle2(paper_title) #Generate the summary
+
+                # Save the paper and the summary
+                save_paper(json_data) #save the paper 
+                save_summary(json_data) # Save the summary
+
+                # Return the new summary
+                return jsonify({'summary': text}), 200
         else:
             return jsonify({'error': 'Invalid paper ID'}), 400
     except Exception as e:
