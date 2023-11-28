@@ -27,7 +27,18 @@
             <h2>Related Articles:</h2>
             <ul>
                 {% for item in suggestions %}
-                <li><a href="{{item.href}}">{{item.title}}{{item.authors}}</a></li>
+                <li>
+                    <a href="{{item.href}}">
+                        {{item.title}}
+                        (<ul class="author_list">
+                            {% for author in item.authors %}
+                            <li>{{author}}</li>
+                            {% endfor %}
+                        </ul>, 
+                        {{item.publication_date}}
+                        )
+                    </a>
+                </li>
                 {% endfor %}
             </ul>
         </div>

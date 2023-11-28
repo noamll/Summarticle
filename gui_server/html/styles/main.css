@@ -17,10 +17,7 @@ body {
   padding: 1rem;
   border-radius: 1rem;
   text-align: center;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  border: solid black 0.2rem;
+  border: solid darkgray 0.2rem;
 }
 
 #slider {
@@ -44,7 +41,8 @@ form {
 .summary-content {
   font-size: 16px;
   border: 1px solid #ccc;
-  padding: 10px;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
 }
 
 .buttons {
@@ -67,12 +65,49 @@ form {
 
 #wrapper {
   box-sizing: border-box;
-  width: min(100%, 60rem);
+  width: 60rem;
   margin: auto;
   padding: 1rem;
-  border: solid black 0.2rem;
+  border: solid darkgray 0.2rem;
+  border-radius: 1rem;
+  margin-top: 1rem;
 }
 
 .vote_images {
   width: 2rem;
+}
+
+@media (max-width: 62rem) {
+  #wrapper {
+    width: 100%;
+    border: none;
+    margin-top: 0rem;
+  }
+}
+
+a {
+  color: black;
+}
+
+a:visited {
+  color: rgb(73, 73, 73);
+}
+.author_list {
+  display: inline;
+  list-style: none;
+  padding: 0px;
+}
+
+.author_list > li {
+  display: inline;
+}
+
+.author_list > li::after {
+  content: ", ";
+}
+.author_list > li:nth-last-child(2)::after {
+  content: " & ";
+}
+.author_list > li:last-child:after {
+  content: "";
 }

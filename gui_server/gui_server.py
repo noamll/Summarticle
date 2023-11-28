@@ -16,6 +16,7 @@ app = FastAPI()
 # FastAPI needs to know where the CSS files are, otherwise using these files in a webpage will result in a 404 for that resource.
 # In practise this means the website will not look as intended.
 app.mount("/styles", StaticFiles(directory="html/styles"), name="styles")
+app.mount("/images", StaticFiles(directory="html/images"), name="styles")
 
 # FastAPI uses decoraters to 'attach' functions to an adress.
 # In this case it is a POST method because that supports uploading a file.
