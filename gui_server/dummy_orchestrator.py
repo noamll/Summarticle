@@ -11,27 +11,7 @@ with responses.RequestsMock() as rsps:
         responses.POST,
         "http://ORCHESTRATOR/upload_article",
         json={
-            "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla venenatis commodo augue, feugiat vestibulum turpis molestie quis. Cras eu lacus velit. Praesent metus erat, scelerisque ut volutpat ac, mollis ac enim. Morbi hendrerit orci in varius porta. Donec viverra metus sed ante consectetur, ac sagittis urna eleifend. Vivamus maximus dignissim semper. Phasellus non porttitor velit, eu dictum est. Proin molestie facilisis fringilla. Maecenas cursus, massa a hendrerit dignissim, dolor ipsum pretium sapien, et euismod mauris eros eget tortor. Sed sed molestie justo, id sollicitudin diam. Phasellus gravida dignissim quam, ac vestibulum ipsum venenatis nec. Fusce consectetur in metus quis consequat. Morbi tempor rutrum mauris ut euismod.",
-            "id": 13,
-            "suggestions": [
-                {
-                    "id": 13,
-                    "title": "TEST",
-                    "authors": [
-                        "J. Doe",
-                    ],
-                    "publication_date": "2023-11-06",
-                },
-                {
-                    "id": 18,
-                    "title": "Color interpretation is guided by informativity expectations, not by world knowledge about colors",
-                    "authors": [
-                        "Rohde",
-                        "Rubio-Fernandez",
-                    ],
-                    "publication_date": "2022-12-01",
-                },
-            ],
+            "paper_id": 13,
         },
     )
 

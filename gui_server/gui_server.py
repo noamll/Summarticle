@@ -1,6 +1,6 @@
 from fastapi import Form, UploadFile, FastAPI
 from typing import Annotated
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import requests
 import os
@@ -35,12 +35,8 @@ async def process_article(
     request_url = "http://ORCHESTRATOR/upload_article"
     request_files = {'paper': paper.file}
     request_values = {'language_toggle': language_toggle}
-    summary_data = requests.post(request_url, files=request_files, data=request_values).json()
-    for suggestion in summary_data["suggestions"]:
-        suggestion["href"] = f"/get_summary?paper_id={suggestion['id']}"
-    html_text = template.render(summary_data)
-    response = HTMLResponse(content=html_text)
-    response.headers["Content-Type"] = "text.html"
+    response_data = requests.post(request_url, files=request_files, data=request_values).json()
+    response = RedirectResponse(f"/get_summary?paper_id={response_data['paper_id']}", 303)
     return response
 
 @app.get("/get_summary")

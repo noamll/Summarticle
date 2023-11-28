@@ -19,6 +19,12 @@ class TestServer(unittest.TestCase):
         self.r_mock.post(
             "http://ORCHESTRATOR/upload_article",
             json={
+                "paper_id": 13,
+            },
+        )
+        self.r_mock.get(
+            "http://ORCHESTRATOR/get_summary",
+            json={
                 "summary": "Ut vestibulum dignissim velit, vel aliquam massa placerat porttitor. Nunc non leo elit. Praesent non leo varius, condimentum enim ac, venenatis elit. Nulla facilisi. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi efficitur, justo in imperdiet dictum, leo nibh tristique lorem, nec consequat nisl sapien ut magna. Ut placerat egestas lacus, at feugiat dolor imperdiet sed. Nulla est metus, fringilla quis sodales a, placerat vel tortor. Etiam vehicula malesuada lorem convallis tempus. Curabitur porta ex at pellentesque ullamcorper. ",
                 "id": 13,
                 "suggestions": [
@@ -36,6 +42,7 @@ class TestServer(unittest.TestCase):
 
         with open("test.pdf", "br") as test_file:
             response = client.post("/upload_article", files={"paper": test_file}, data={"language_toggle": True})
+        print(response)
         html = response.text
         assert "TEST" in html
         assert "J. Doe" in html
