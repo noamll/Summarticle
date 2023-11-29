@@ -159,12 +159,12 @@ def save_paper(json_data):
     paper_title = json_data.get("paper", {}).get("title")
     
     # Check if the paper title is not already in the Paper table
-    select_query = "SELECT * FROM papers WHERE title = ?"
+    select_query = "SELECT * FROM Paper WHERE title = ?"
     cursor.execute(select_query, (paper_title,))
     
     if not cursor.fetchone():
         # Paper title is not in the Paper table, save the paper
-        insert_query = "INSERT INTO papers (title, authors, DOI, keywords) VALUES (?, ?, ?, ?)"
+        insert_query = "INSERT INTO Paper (title, authors, DOI, keywords) VALUES (?, ?, ?, ?)"
         cursor.execute(insert_query, (
             paper_title,
             json_data.get("paper", {}).get("authors"),
@@ -177,54 +177,49 @@ def save_paper(json_data):
     cursor.close()
     connection.close()
 
-def save_summary(json_data):
+def save_summary_en(json_data):
     connection = pyodbc.connect(connection_string)
     cursor = connection.cursor()
 
     paper_title = json_data.get("summary", {}).get("title")
     
-    # Check if the paper title is not already in the Summary table
-    select_query = "SELECT * FROM summary WHERE title = ?"
-    cursor.execute(select_query, (paper_title,))
-    
-    if not cursor.fetchone():
-        # Paper title is not in the Summary table, save the summary
-        insert_query = "INSERT INTO summary (title, summary_en, rating_en) VALUES (?, ?, ?)"
-        cursor.execute(insert_query, (
-            paper_title,
-            json_data.get("summary", {}).get("summary_en"),
-            json_data.get("summary", {}).get("rating_en", 0)
-        ))
-        
-        connection.commit()
-    else:
-        # Paper title is already in the Summary table, save summary in a new row
-        insert_query = "INSERT INTO summary (title, summary_en, rating_en) VALUES (?, ?, ?)"
-        cursor.execute(insert_query, (
-            paper_title,
-            json_data.get("summary", {}).get("summary_en"),
-            json_data.get("summary", {}).get("rating_en", 0)
-        ))
+    insert_query = "INSERT INTO Summary (title, summary_en, rating_en) VALUES (?, ?, ?)"
+    cursor.execute(insert_query, (
+        paper_title,
+        json_data.get("summary", {}).get("summary_en"),
+        json_data.get("summary", {}).get("rating_en", 6)
+    ))
 
-        connection.commit()
+    connection.commit()
 
     cursor.close()
     connection.close()
 
-def read_summary(json_data):
+def save_summary_nl(json_data):
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    paper_title = json_data.get("summary", {}).get("title")
+    
+    insert_query = "INSERT INTO Summary (title, summary_nl, rating_nl) VALUES (?, ?, ?)"
+    cursor.execute(insert_query, (
+        paper_title,
+        json_data.get("summary", {}).get("summary_nl"),
+        json_data.get("summary", {}).get("rating_nl", 6)
+    ))
+
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+def read_summary_en(json_data):
     connection = pyodbc.connect(connection_string)
     cursor = connection.cursor()
 
     paper_title = json_data.get("title")
-    language = json_data.get("language", "en")
 
-    # Check whether JSON GET request is from summary_en or summary_nl
-    if language == "en":
-        select_query = "SELECT summary_en, rating_en FROM summary WHERE title = ? AND summary_en IS NOT NULL"
-    elif language == "nl":
-        select_query = "SELECT summary_nl, rating_nl FROM summary WHERE title = ? AND summary_nl IS NOT NULL"
-    else:
-        return None  # Invalid language
+    select_query = "SELECT summary_en, rating_en FROM Summary WHERE title = ? AND summary_en IS NOT NULL"
     
     cursor.execute(select_query, (paper_title,))
     result = cursor.fetchone()
@@ -234,7 +229,28 @@ def read_summary(json_data):
         summary, rating = result
         return summary if random.random() < rating / 10.0 else None  # Weighted random based on rating
     else:
-        return None  # Create a new summary (you already have code for this)
+        return None
+
+    cursor.close()
+    connection.close()
+
+def read_summary_nl(json_data):
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    paper_title = json_data.get("title")
+
+    select_query = "SELECT summary_nl, rating_nl FROM Summary WHERE title = ? AND summary_nl IS NOT NULL"
+    
+    cursor.execute(select_query, (paper_title,))
+    result = cursor.fetchone()
+
+    if result:
+        # If there is a summary in the requested language, return it based on the rating
+        summary, rating = result
+        return summary if random.random() < rating / 10.0 else None  # Weighted random based on rating
+    else:
+        return None
 
     cursor.close()
     connection.close()
@@ -246,7 +262,7 @@ def read_keyword(text):
     keyword = text
 
     # Get keyword from JSON request
-    select_query = "SELECT title FROM papers WHERE keywords LIKE ?"
+    select_query = "SELECT title FROM Paper WHERE keywords LIKE ?"
     cursor.execute(select_query, ('%' + keyword + '%',))
     result = cursor.fetchall()
 
@@ -259,19 +275,41 @@ def read_keyword(text):
     cursor.close()
     connection.close()
 
-def update_rating(json_data):
+def update_rating_en(json_data):
     connection = pyodbc.connect(connection_string)
     cursor = connection.cursor()
 
     paper_title = json_data.get("title")
     rating_type = json_data.get("rating_type")
 
-    # If JSON-rating == thumbs-up, corresponding rating in table += 1
-    # If JSON-rating == thumbs-down, corresponding rating in table -= 1
+    # If JSON-rating == thumbs-up, rating_en += 1
+    # If JSON-rating == thumbs-down, rating_nl -= 1
     if rating_type == "thumbs-up":
-        update_query = "UPDATE summary SET rating_en = CASE WHEN rating_en + 1 > 10 THEN 10 ELSE rating_en + 1 END WHERE title = ?"
+        update_query = "UPDATE Summary SET rating_en = CASE WHEN rating_en + 1 > 10 THEN 10 ELSE rating_en + 1 END WHERE title = ?"
     elif rating_type == "thumbs-down":
-        update_query = "UPDATE summary SET rating_en = CASE WHEN rating_en - 1 < 1 THEN 1 ELSE rating_en - 1 END WHERE title = ?"
+        update_query = "UPDATE Summary SET rating_en = CASE WHEN rating_en - 1 < 1 THEN 1 ELSE rating_en - 1 END WHERE title = ?"
+    else:
+        return None  # Invalid rating type
+
+    cursor.execute(update_query, (paper_title,))
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+def update_rating_nl(json_data):
+    connection = pyodbc.connect(connection_string)
+    cursor = connection.cursor()
+
+    paper_title = json_data.get("title")
+    rating_type = json_data.get("rating_type")
+
+    # If JSON-rating == thumbs-up, rating_nl in table += 1
+    # If JSON-rating == thumbs-down, rating_en in table -= 1
+    if rating_type == "thumbs-up":
+        update_query = "UPDATE Summary SET rating_nl = CASE WHEN rating_nl + 1 > 10 THEN 10 ELSE rating_nl + 1 END WHERE title = ?"
+    elif rating_type == "thumbs-down":
+        update_query = "UPDATE Summary SET rating_nl = CASE WHEN rating_nl - 1 < 1 THEN 1 ELSE rating_nl - 1 END WHERE title = ?"
     else:
         return None  # Invalid rating type
 
@@ -286,7 +324,7 @@ def delete_summary():
     cursor = connection.cursor()
 
     # If summary_rating is lower than 3, delete from Summary table
-    delete_query = "DELETE FROM summary WHERE rating_en < 3"
+    delete_query = "DELETE FROM Summary WHERE rating_en < 3"
     cursor.execute(delete_query)
     connection.commit()
 

@@ -82,7 +82,7 @@ def save_translated_summary():
             save_summary({'title': json_data['title'], 'summary': translated_summary})
 
         # Save the original summary to the database
-        save_summary(json_data)
+        save_summary({'title': json_data['title'], 'summary': summary})
 
         # Return a success message
         return jsonify({'message': 'Summary saved successfully'}), 200
