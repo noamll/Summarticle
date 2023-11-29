@@ -1,20 +1,37 @@
-
-#Here's a basic unit test for the get_summary endpoint using the unittest and flask_testing modules in Python. 
-#This test checks if the endpoint returns a 200 status code when a valid paper_id is provided.
-
 import unittest
-from flask_testing import TestCase
-from your_flask_app import app  # replace with your actual Flask app import
+import json
+from flask import Flask
+from werkzeug.datastructures import FileStorage
+from orchestrator import app 
+import time
 
-class TestGetSummary(TestCase):
-    def create_app(self):
-        app.config['TESTING'] = True
-        return app
+class FlaskTest(unittest.TestCase):
+    def setUp(self):
+        self.app = app
+        self.client = self.app.test_client()
 
-    def test_get_summary(self):
-        # Assuming '1234' is a valid paper_id in your uploaded_papers dictionary
-        response = self.client.get('/get_summary/1234')
-        self.assertEqual(response.status_code, 200)
+    def test_upload_pdf(self):
+        with open('Bilingualism and the role of music in early language acquisition_ u719136.pdf', 'rb') as f:
+            data = {
+                'paper': (f, 'Bilingualism and the role of music in early language acquisition_ u719136.pdf'),
+                'translate_summary': 'true'
+            }
+            response = self.client.post('/upload-article', content_type='multipart/form-data', data=data)
+            
+            print(response.data)  # Add this line
+            paper_id = json.loads(response.data)['paper_id']
+
+            # Simulate processing time
+            time.sleep(5)
+
+            response = self.client.get(f'/get_summary/{paper_id}')
+            translate_summary = data['translate_summary'] == 'true'
+            summary = json.loads(response.data)['summary']
+
+            # Check if the summary is translated
+            # This will depend on how you're implementing translation
+            # For this example, let's assume that a translated summary always starts with '[Translated]'
+            self.assertEqual(summary.startswith('[Translated]'), translate_summary)
 
 if __name__ == '__main__':
     unittest.main()
