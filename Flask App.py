@@ -7,10 +7,13 @@ import time
 import uuid
 
 # For JSON to DB
-from AWS_SQS_Summarticle import save_summary
-from AWS_SQS_Summarticle import read_summary
+from AWS_SQS_Summarticle import save_summary_en
+from AWS_SQS_Summarticle import save_summary_nl
+from AWS_SQS_Summarticle import read_summary_en
+from AWS_SQS_Summarticle import read_summary_nl
 from AWS_SQS_Summarticle import read_keyword
-from AWS_SQS_Summarticle import update_rating
+from AWS_SQS_Summarticle import update_rating_en
+from AWS_SQS_Summarticle import update_rating_nl
 from AWS_SQS_Summarticle import delete_summary
 from AWS_SQS_Summarticle import save_paper
 from AWS_SQS_Summarticle import translate_text
@@ -41,8 +44,8 @@ def upload_pdf():
         paper_id = str(uuid.uuid4())
 
         
-        # For simplicity, assume the file is saved to a directory
-        pdf_file.save('uploads/' + pdf_file.filename)
+        
+        pdf_file.save(pdf_file.filename)
 
         # Store the file path, translation flag, and paper ID in the dictionary
         uploaded_papers[paper_id] = {
@@ -79,17 +82,16 @@ def save_translated_summary():
             translated_summary = translate_text(json_data['summary'])  
 
             # Save the translated summary to the database
-            save_summary({'title': json_data['title'], 'summary': translated_summary})
+            save_summary_nl({'title': json_data['title'], 'summary': translated_summary})
 
         # Save the original summary to the database
-        save_summary({'title': json_data['title'], 'summary': summary})
+        save_summary_en(json_data)
 
         # Return a success message
         return jsonify({'message': 'Summary saved successfully'}), 200
     except Exception as e:
         # Return an error message in case of exceptions
         return jsonify({'error': str(e)}), 500
-
 
 #new endpoint for retrieving a summary stored in the database, based on paper ID
 @app.route('/get-summary/<string:paper_id>', methods=['GET'])
@@ -104,18 +106,22 @@ def get_summary(paper_id):
             json_data = {'title': paper_title}
 
             # Retrieve the summary from the database
-            summary = read_summary(json_data)
+            summary_en = read_summary_en(json_data)
+            summary_nl = read_summary_nl(json_data)
 
             # If summary is not None, return the summary
-            if summary is not None:
+            if summary_en is not None and summary_nl is not None:
+                summary = summary_en if not translate_summary else summary_nl
                 return jsonify({'summary': summary}), 200
+               
             else:
                 # If there is no summary for this article, summarize it using the AI model
                 text = sumArticle2(paper_title) #Generate the summary
 
                 # Save the paper and the summary
                 save_paper(json_data) #save the paper 
-                save_summary(json_data) # Save the summary
+                save_summary_en(json_data) # Save the English summary
+                save_summary_nl(json_data) # Save the Dutch summary
 
                 # Return the new summary
                 return jsonify({'summary': text}), 200
@@ -155,8 +161,13 @@ def update_rating_endpoint():
         # Get the JSON data from the request
         json_data = request.get_json()
 
-        # Update the rating
-        update_rating(json_data)
+        # Check if the language flag is set to 'nl' (Dutch)
+        if json_data.get('language', '').lower() == 'nl':
+            # Update the rating for the Dutch summary
+            update_rating_nl(json_data)
+        else:
+            # Update the rating for the English summary
+            update_rating_en(json_data)
 
         # Return a success message
         return jsonify({'message': 'Rating updated successfully'}), 200
@@ -182,5 +193,3 @@ def delete_summary_endpoint():
 # Start the Flask app
 if __name__ == '__main__':
     app.run(debug=True)
-
-
