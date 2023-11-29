@@ -30,6 +30,7 @@ uploaded_papers = {}
 # It's saving the file to a directory named 'uploads'.
 # It's storing the file path, the translate_summary flag, and the paper ID in the uploaded_papers dictionary.
 # It's sending the paper ID back to the client in the response.
+
 @app.route('/upload-article', methods=['POST'])
 def upload_pdf():
     try:
@@ -56,7 +57,16 @@ def upload_pdf():
 
 
 
-#New endpoint for saving summaries to the database
+# New endpoint for saving summaries to the database:
+# It's extracting the JSON data from the request using request.get_json(). 
+# This data is expected to contain the summary and possibly a translate_summary flag.
+# It's checking if the translate_summary flag is present and set to True in the JSON data. If the flag is not provided, it defaults to False.
+# If translation is requested, it's translating the summary using the translate_text function. 
+# It's then saving the translated summary to the database using the save_summary function. 
+# The save_summary function is called with a new dictionary containing the title from the original JSON data and the translated summary.
+# Regardless of whether translation was requested, it's saving the original summary to the database using the save_summary function. 
+# The save_summary function is called with the original JSON data.
+
 @app.route('/save-summary', methods=['POST'])
 def save_translated_summary():
     try:
