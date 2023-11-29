@@ -13,6 +13,7 @@ from AWS_SQS_Summarticle import read_keyword
 from AWS_SQS_Summarticle import update_rating
 from AWS_SQS_Summarticle import delete_summary
 from AWS_SQS_Summarticle import save_paper
+from AWS_SQS_Summarticle import translate_text
 
 
 
@@ -56,7 +57,15 @@ def save_translated_summary():
         # Get the JSON data from the request
         json_data = request.get_json()
 
-        # Save the summary to the database
+        # Check if translation is requested
+        if json_data.get('translate_summary', False):
+            # Translate the summary
+            translated_summary = translate_text(json_data['summary'])  
+
+            # Save the translated summary to the database
+            save_summary({'title': json_data['title'], 'summary': translated_summary})
+
+        # Save the original summary to the database
         save_summary(json_data)
 
         # Return a success message
