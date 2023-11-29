@@ -1,12 +1,12 @@
-#For Flask app
+# For Flask app
 from flask import Flask, request, jsonify
 
-#For AWS SQS
+# For AWS SQS
 from AWS_SQS_Summarticle import send_message_to_queue, process_messages_from_queue
 import time
 import uuid
 
-#For JSON to DB
+# For JSON to DB
 from AWS_SQS_Summarticle import save_summary
 from AWS_SQS_Summarticle import read_summary
 from AWS_SQS_Summarticle import read_keyword
@@ -16,14 +16,20 @@ from AWS_SQS_Summarticle import save_paper
 from AWS_SQS_Summarticle import translate_text
 
 
-
+# Create Flask app
 app = Flask(__name__)
 
 
 # Create a dictionary to store uploaded papers and their IDs
 uploaded_papers = {}
 
-# Expose an API endpoint for PDF upload
+# Expose an API endpoint for PDF upload:
+# It's extracting the file from the request using request.files['paper'].
+# It's extracting the translate_summary flag from the request. If the flag is not provided, it defaults to False.
+# It's generating a unique ID for the paper using uuid.uuid4().
+# It's saving the file to a directory named 'uploads'.
+# It's storing the file path, the translate_summary flag, and the paper ID in the uploaded_papers dictionary.
+# It's sending the paper ID back to the client in the response.
 @app.route('/upload-article', methods=['POST'])
 def upload_pdf():
     try:
@@ -33,7 +39,7 @@ def upload_pdf():
         # Generate a unique paper ID
         paper_id = str(uuid.uuid4())
 
-        # Save the file or process its content as needed
+        
         # For simplicity, assume the file is saved to a directory
         pdf_file.save('uploads/' + pdf_file.filename)
 
